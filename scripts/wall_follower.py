@@ -11,6 +11,14 @@ from follow import make_marker
 from helpers import State, Node
 
 
+# Adapted from https://numpy.org/doc/stable/reference/generated/numpy.linalg.lstsq.html
+def linear_regression(x: np.array, y: np.array) -> Tuple[float, float]:
+    """ Conduct a least squares regression for y = m*x + b, returning m, b. """
+    A = np.vstack([x, np.ones(len(x))]).T
+    m, b = np.linalg.lstsq(A, y, rcond=None)[0]
+    return m, b
+
+
 class WallFollower(State):
     def __init__(self):
         pass
@@ -39,24 +47,15 @@ class WallFollower(State):
             if rho != inf
         ]
 
-    def ransac(self, threshold: float = 0.01, min_matches: int = 50, max_iters: int = 1000):
+    def ransac(self, threshold: float = 0.0001, min_matches: int = 50, points_per_attempt: int = 25, max_iters: int = 1000):
         print("RANSAC1")
         ranges = self.laser_ranges_cart
 
         print("RANSAC2")
         for _ in range(max_iters):
-            points = choices(ranges, k=2)
-            print(
-                (points[1][1] - points[0][1]),
-                (points[1][0] - points[0][0])
-            )
-            try:
-                m = (points[1][1] - points[0][1]) / \
-                    (points[1][0] - points[0][0])
-            except ZeroDivisionError:
-                continue
+            points = np.array(choices(ranges, k=points_per_attempt))
 
-            b = (-m * points[0][0]) + points[0][1]
+            m, b = linear_regression(points[:, 0], points[:, 1])
 
             matches = 0
 
