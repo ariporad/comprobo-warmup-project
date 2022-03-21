@@ -47,7 +47,7 @@ class WallFollower(State):
             if rho != inf
         ]
 
-    def ransac(self, threshold: float = 0.0001, min_matches: int = 50, points_per_attempt: int = 25, max_iters: int = 1000):
+    def ransac(self, threshold: float = 0.0005, min_matches: int = 60, points_per_attempt: int = 40, max_iters: int = 1000):
         print("RANSAC1")
         ranges = self.laser_ranges_cart
 
@@ -71,6 +71,7 @@ class WallFollower(State):
                     Point(0, 0, 0),
                     shape=Marker.LINE_STRIP,
                     scale=(0.1, 0.1, 0.1),
+                    color=(0, 1, 0, 0.25),
                     frame_id='laser_link'
                 )
                 marker.points = [
