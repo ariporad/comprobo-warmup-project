@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
-from cmath import pi
-from math import cos, radians, sin, inf
+import math
 import numpy as np
 import rospy
 import ros_numpy.point_cloud2 as numpy_point_cloud2
@@ -10,8 +9,7 @@ from visualization_msgs.msg import Marker
 from tf.transformations import quaternion_from_euler
 from random import choices
 
-from follow import make_marker
-from helpers import State, Node
+from helpers import State, Node, QuaternionMath
 
 
 # Adapted from https://numpy.org/doc/stable/reference/generated/numpy.linalg.lstsq.html
@@ -30,15 +28,27 @@ class WallFollower(State):
         super().activate(node)
 
     def update(self):
-        self.ransac()
+        orientation = self.detect_wall_orientation()
 
-    def ransac(
+        # RANSAC Failed
+        if orientation is None:
+            print("RANSAC Failed!")
+            self.node.set_speed(0, 0)
+            return
+
+        diff = QuaternionMath.ijk_magnitude(
+            QuaternionMath.difference(orientation, self.node.orientation)
+        )
+
+        self.node.set_speed(0.1, diff)
+
+    def detect_wall_orientation(
         self,
         threshold: float = 0.0005,
         min_matches: int = 20,
         points_per_attempt: int = 5,
         max_iters: int = 1000
-    ):
+    ) -> Optional[Quaternion]:
         """
         Perform a modified RANSAC against the laser scan data to detect the wall.
 
@@ -63,7 +73,20 @@ class WallFollower(State):
                     matches += 1
 
             if matches > min_matches:  # Success!
+                angle = math.asin(m)
+                orientation = QuaternionMath.tf_to_rospy(
+                    quaternion_from_euler(0, 0, angle)
+                )
+                print("RANSAC, m = ", m, "angle =", angle * (180 / math.pi))
                 self.node.mark_target(
+                    # Marker Option 1: Vector
+
+                    # self.node.position,
+                    # orientation=orientation,
+                    # shape=Marker.ARROW,
+                    # scale=(1, 0.1, 0.1),
+
+                    # Marker Option 2: Line
                     [
                         Point(-10, (m * -10) + b, 0),
                         Point(20, (m * 20) + b, 0)
@@ -72,8 +95,9 @@ class WallFollower(State):
                     scale=(0.1, 0.1, 0.1),
                     color=(0, 1, 0, 0.25)
                 )
+                return orientation
 
-                return
+        return None
 
 
 if __name__ == '__main__':

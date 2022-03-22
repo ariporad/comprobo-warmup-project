@@ -69,7 +69,7 @@ class QuaternionMath:
 
     @staticmethod
     def difference(q1: Quaternion, q2: Quaternion) -> Quaternion:
-        """ q2 = x * q1, returns x"""
+        """ q2 = x * q1, returns x """
         return QuaternionMath.tf_to_rospy(
             quaternion_multiply(
                 QuaternionMath.rospy_to_tf(q2),
