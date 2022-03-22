@@ -1,6 +1,9 @@
 #!/usr/bin/env python3
+from cmath import pi
 from math import cos, radians, sin, inf
 import numpy as np
+import rospy
+import ros_numpy.point_cloud2 as numpy_point_cloud2
 from typing import Optional, Tuple, List
 from geometry_msgs.msg import Quaternion, Point, Vector3, Twist, Pose
 from visualization_msgs.msg import Marker
@@ -21,37 +24,31 @@ def linear_regression(x: np.array, y: np.array) -> Tuple[float, float]:
 
 class WallFollower(State):
     def __init__(self):
-        pass
+        self.range_pub = rospy.Publisher('/points', Marker, queue_size=10)
 
     def activate(self, node: Node):
         super().activate(node)
 
     def update(self):
-        print("Updating...")
         self.ransac()
 
-    @property
-    def laser_ranges_cart(self) -> List[Tuple[float, float]]:
-        raw_ranges = self.node.laser_ranges[:-1]
-        ranges: list[Tuple[float, float]] = zip(
-            [float(x) for x in range(len(raw_ranges))],
-            raw_ranges
-        )
+    def ransac(
+        self,
+        threshold: float = 0.0005,
+        min_matches: int = 20,
+        points_per_attempt: int = 5,
+        max_iters: int = 1000
+    ):
+        """
+        Perform a modified RANSAC against the laser scan data to detect the wall.
 
-        return [
-            (
-                -rho * cos(radians(phi)),
-                -rho * sin(radians(phi)),
-            )
-            for phi, rho in ranges
-            if rho != inf
-        ]
+        This cuts a few corners compared to a true RANSAC, but it's plenty good for this use case.
 
-    def ransac(self, threshold: float = 0.0005, min_matches: int = 60, points_per_attempt: int = 40, max_iters: int = 1000):
-        print("RANSAC1")
-        ranges = self.laser_ranges_cart
+        Default parameters were determined by experimentation.
+        """
+        ranges = numpy_point_cloud2.pointcloud2_to_xyz_array(
+            self.node.laser_data)
 
-        print("RANSAC2")
         for _ in range(max_iters):
             points = np.array(choices(ranges, k=points_per_attempt))
 
@@ -59,26 +56,23 @@ class WallFollower(State):
 
             matches = 0
 
-            for x, y in ranges:
+            for x, y, z in ranges:
                 y_predicted = (m * x) + b
                 y_err = abs(y - y_predicted)
                 if y_err <= threshold:
                     matches += 1
 
-            if matches > min_matches:
-                print("RANSACED!")
-                marker = make_marker(
-                    Point(0, 0, 0),
+            if matches > min_matches:  # Success!
+                self.node.mark_target(
+                    [
+                        Point(-10, (m * -10) + b, 0),
+                        Point(20, (m * 20) + b, 0)
+                    ],
                     shape=Marker.LINE_STRIP,
                     scale=(0.1, 0.1, 0.1),
-                    color=(0, 1, 0, 0.25),
-                    frame_id='laser_link'
+                    color=(0, 1, 0, 0.25)
                 )
-                marker.points = [
-                    Point(-10, (m * -10) + b, 0),
-                    Point(20, (m * 20) + b, 0)
-                ]
-                self.node.target_pub.publish(marker)
+
                 return
 
 

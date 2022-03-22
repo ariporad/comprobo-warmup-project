@@ -3,18 +3,20 @@ from __future__ import annotations
 import numpy
 import rospy
 import math
+import tf
 from math import pi
-from typing import Optional, List, Type
+from typing import Optional, List, Type, Union, Iterable
 from std_srvs.srv import Empty
 from geometry_msgs.msg import Quaternion, Point, Vector3, Twist, Pose
 from nav_msgs.msg import Odometry
-from sensor_msgs.msg import LaserScan
+from sensor_msgs.msg import LaserScan, PointCloud2
+
 from visualization_msgs.msg import Marker
 from tf.transformations import euler_from_quaternion, quaternion_multiply, quaternion_from_euler, quaternion_conjugate
 
 
 # Adapted from: https://comprobo20.github.io/Sample_code/marker_sample
-def make_marker(position: Point,
+def make_marker(point: Union[Point, Iterable[Point]],
                 orientation: Quaternion = Quaternion(0, 0, 0, 1),
                 id: int = 0,
                 ns: str = "aporad",
@@ -22,6 +24,7 @@ def make_marker(position: Point,
                 action=Marker.ADD,
                 scale=(1.0, 0.1, 0.1),
                 color=(0.0, 1.0, 0.0, 1.0),
+                lifetime=1,
                 frame_id: str = 'odom'):
     marker = Marker()
     marker.header.frame_id = frame_id
@@ -30,8 +33,14 @@ def make_marker(position: Point,
     marker.id = id
     marker.type = shape
     marker.action = action
-    marker.pose.position = position
     marker.pose.orientation = orientation
+    if isinstance(point, Point):
+        marker.pose.position = point
+    else:
+        marker.pose.position = Point(0, 0, 0)
+        marker.points = point
+
+    marker.lifetime = rospy.Duration(lifetime)
 
     x, y, z = scale
     marker.scale.x = x
@@ -152,7 +161,7 @@ class Node:
     active_state: State
 
     _odom: Optional[Odometry] = None
-    _scan: Optional[LaserScan] = None
+    _laser_data: Optional[PointCloud2] = None
 
     velocity_pub: rospy.Publisher
     target_pub: rospy.Publisher
@@ -165,8 +174,10 @@ class Node:
         self.velocity_pub = rospy.Publisher('/cmd_vel', Twist, queue_size=10)
         self.target_pub = rospy.Publisher('/target', Marker, queue_size=10)
 
+        self.transform = tf.TransformListener()
+
         self._subscribe('/odom', Odometry, '_odom')
-        self._subscribe('/stable_scan', LaserScan, '_scan')
+        self._subscribe('/projected_stable_scan', PointCloud2, '_laser_data')
 
     def _subscribe(self, topic: str, msg_type: Type, attr_name: str, *args, **kwargs):
         def _handler(msg):
@@ -213,10 +224,10 @@ class Node:
         return self._odom
 
     @property
-    def scan(self) -> LaserScan:
-        if self._scan is None:
+    def laser_data(self) -> PointCloud2:
+        if self._laser_data is None:
             raise WaitingForData()
-        return self._scan
+        return self._laser_data
 
     @property
     def position(self) -> Point:
