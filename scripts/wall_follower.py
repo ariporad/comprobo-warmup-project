@@ -2,7 +2,6 @@
 import math
 import numpy as np
 import rospy
-import ros_numpy.point_cloud2 as numpy_point_cloud2
 from typing import Optional, Tuple, List
 from geometry_msgs.msg import Quaternion, Point, Vector3, Twist, Pose
 from visualization_msgs.msg import Marker
@@ -56,8 +55,7 @@ class WallFollower(State):
 
         Default parameters were determined by experimentation.
         """
-        ranges = numpy_point_cloud2.pointcloud2_to_xyz_array(
-            self.node.laser_data)
+        ranges = self.node.laser_points
 
         for _ in range(max_iters):
             points = np.array(choices(ranges, k=points_per_attempt))

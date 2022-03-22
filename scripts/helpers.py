@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 from __future__ import annotations
-import numpy
+import numpy as np
 import rospy
 import math
 import tf
+import ros_numpy.point_cloud2 as np_point_cloud2
 from math import pi
 from typing import Optional, List, Type, Union, Iterable
 from std_srvs.srv import Empty
@@ -90,15 +91,15 @@ class QuaternionMath:
         )
 
     @staticmethod
-    def rospy_to_tf(q: Quaternion) -> numpy.array:
+    def rospy_to_tf(q: Quaternion) -> np.array:
         if isinstance(q, list):
-            q = numpy.array(q)
-        if isinstance(q, numpy.ndarray):
+            q = np.array(q)
+        if isinstance(q, np.ndarray):
             return q
-        return numpy.array([q.x, q.y, q.z, q.w])
+        return np.array([q.x, q.y, q.z, q.w])
 
     @staticmethod
-    def tf_to_rospy(q: numpy.array) -> Quaternion:
+    def tf_to_rospy(q: np.array) -> Quaternion:
         if isinstance(q, Quaternion):
             return q
         return Quaternion(q[0], q[1], q[2], q[3])
@@ -161,7 +162,7 @@ class Node:
     active_state: State
 
     _odom: Optional[Odometry] = None
-    _laser_data: Optional[PointCloud2] = None
+    _laser_point_cloud: Optional[PointCloud2] = None
 
     velocity_pub: rospy.Publisher
     target_pub: rospy.Publisher
@@ -177,7 +178,8 @@ class Node:
         self.transform = tf.TransformListener()
 
         self._subscribe('/odom', Odometry, '_odom')
-        self._subscribe('/projected_stable_scan', PointCloud2, '_laser_data')
+        self._subscribe('/projected_stable_scan',
+                        PointCloud2, '_laser_point_cloud')
 
     def _subscribe(self, topic: str, msg_type: Type, attr_name: str, *args, **kwargs):
         def _handler(msg):
@@ -224,10 +226,16 @@ class Node:
         return self._odom
 
     @property
-    def laser_data(self) -> PointCloud2:
-        if self._laser_data is None:
+    def laser_point_cloud(self) -> PointCloud2:
+        if self._laser_point_cloud is None:
             raise WaitingForData()
-        return self._laser_data
+        return self._laser_point_cloud
+
+    @property
+    def laser_points(self) -> np.array:
+        return np_point_cloud2.pointcloud2_to_xyz_array(
+            self.laser_point_cloud
+        )
 
     @property
     def position(self) -> Point:
@@ -244,10 +252,6 @@ class Node:
     @property
     def angular_vel(self) -> Vector3:
         return self.odom.twist.twist.angular
-
-    @property
-    def laser_ranges(self) -> List[float]:
-        return self.scan.ranges
 
 
 def reset_gazebo(wait: bool = True):
