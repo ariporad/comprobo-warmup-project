@@ -8,15 +8,7 @@ from visualization_msgs.msg import Marker
 from tf.transformations import quaternion_from_euler
 from random import choices
 
-from helpers import State, Node, QuaternionMath
-
-
-# Adapted from https://numpy.org/doc/stable/reference/generated/numpy.linalg.lstsq.html
-def linear_regression(x: np.array, y: np.array) -> Tuple[float, float]:
-    """ Conduct a least squares regression for y = m*x + b, returning m, b. """
-    A = np.vstack([x, np.ones(len(x))]).T
-    m, b = np.linalg.lstsq(A, y, rcond=None)[0]
-    return m, b
+from helpers import State, Node, QuaternionMath, linear_regression
 
 
 class WallFollower(State):
