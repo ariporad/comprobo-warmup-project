@@ -8,7 +8,7 @@ from visualization_msgs.msg import Marker
 from tf.transformations import quaternion_from_euler
 from random import choices
 
-from helpers import State, Node, QuaternionMath, linear_regression
+from helpers import State, Node, q_math, linear_regression
 
 
 class WallFollower(State):
@@ -24,8 +24,8 @@ class WallFollower(State):
             self.node.set_speed(0, 0)
             return
 
-        diff = QuaternionMath.ijk_magnitude(
-            QuaternionMath.difference(orientation, self.node.orientation)
+        diff = q_math.ijk_magnitude(
+            q_math.difference(orientation, self.node.orientation)
         )
 
         self.node.set_speed(0.1, diff)
@@ -61,7 +61,7 @@ class WallFollower(State):
 
             if matches > min_matches:  # Success!
                 angle = math.asin(m)
-                orientation = QuaternionMath.tf_to_rospy(
+                orientation = q_math.tf_to_rospy(
                     quaternion_from_euler(0, 0, angle)
                 )
                 print("RANSAC, m = ", m, "angle =", angle * (180 / math.pi))

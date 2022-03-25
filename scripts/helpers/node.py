@@ -49,7 +49,7 @@ class State:
     def params(self) -> dict[str, Any]:
         return {
             (name): self.node.param(name, val)
-            for name, val in self.default_params
+            for name, val in self.default_params.items()
         }
 
 

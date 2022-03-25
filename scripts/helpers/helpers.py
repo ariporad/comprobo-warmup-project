@@ -2,18 +2,10 @@
 from __future__ import annotations
 import numpy as np
 import rospy
-import math
-import tf
-import ros_numpy.point_cloud2 as np_point_cloud2
-from math import pi
-from typing import Optional, List, Type, Union, Iterable, Tuple
+from typing import Union, Iterable, Tuple
 from std_srvs.srv import Empty
-from geometry_msgs.msg import Quaternion, Point, Vector3, Twist, Pose
-from nav_msgs.msg import Odometry
-from sensor_msgs.msg import LaserScan, PointCloud2
-
+from geometry_msgs.msg import Quaternion, Point
 from visualization_msgs.msg import Marker
-from tf.transformations import euler_from_quaternion, quaternion_multiply, quaternion_from_euler, quaternion_conjugate
 
 
 def linear_regression(x: np.array, y: np.array) -> Tuple[float, float]:
@@ -83,78 +75,10 @@ def make_marker(point: Union[Point, Iterable[Point]],
     return marker
 
 
-class QuaternionMath:
-    @staticmethod
-    def multiply(q1: Quaternion, q2: Quaternion) -> Quaternion:
-        """ q1 * q2 """
-        return QuaternionMath.tf_to_rospy(
-            quaternion_multiply(
-                QuaternionMath.rospy_to_tf(q1),
-                QuaternionMath.rospy_to_tf(q2)
-            )
-        )
-
-    @staticmethod
-    def difference(q1: Quaternion, q2: Quaternion) -> Quaternion:
-        """ q2 = x * q1, returns x """
-        return QuaternionMath.tf_to_rospy(
-            quaternion_multiply(
-                QuaternionMath.rospy_to_tf(q2),
-                QuaternionMath.rospy_to_tf(QuaternionMath.inverse(q1))
-            )
-        )
-
-    @staticmethod
-    def inverse(q: Quaternion) -> Quaternion:
-        return Quaternion(q.x, q.y, q.z, -q.w)
-
-    @staticmethod
-    def ijk_magnitude(q: Quaternion) -> Quaternion:
-        return math.sqrt(
-            (q.x ** 2) +
-            (q.y ** 2) +
-            (q.z ** 2)
-        )
-
-    @staticmethod
-    def rospy_to_tf(q: Quaternion) -> np.array:
-        if isinstance(q, list):
-            q = np.array(q)
-        if isinstance(q, np.ndarray):
-            return q
-        return np.array([q.x, q.y, q.z, q.w])
-
-    @staticmethod
-    def tf_to_rospy(q: np.array) -> Quaternion:
-        if isinstance(q, Quaternion):
-            return q
-        return Quaternion(q[0], q[1], q[2], q[3])
-
-
-class PointMath:
-    @staticmethod
-    def add(*points: List[Point]) -> Point:
-        """ a + b + ... + c """
-        x, y, z = 0, 0, 0
-        for point in points:
-            x += point.x
-            y += point.y
-            z += point.z
-        return Point(x, y, z)
-
-    @staticmethod
-    def subtract(a: Point, b: Point) -> Point:
-        """ a - b """
-        return Point(
-            a.x - b.x,
-            a.y - b.y,
-            a.z - b.z
-        )
-
-    @staticmethod
-    def magnitude(point: Point) -> float:
-        return math.sqrt((point.x ** 2) + (point.y ** 2) + (point.z ** 2))
-
-    @staticmethod
-    def distance(a: Point, b: Point) -> float:
-        return PointMath.magnitude(PointMath.subtract(a, b))
+def clip(min: float, max: float, val: float) -> float:
+    if val < min:
+        return min
+    elif val > max:
+        return max
+    else:
+        return val

@@ -1,24 +1,10 @@
 #!/usr/bin/env python3
-from email.errors import NonASCIILocalPartDefect
 import math
 import numpy as np
-import rospy
-from typing import Optional, Tuple, List
-from geometry_msgs.msg import Quaternion, Point, Vector3, Twist, Pose
-from visualization_msgs.msg import Marker
-from tf.transformations import quaternion_from_euler, euler_from_quaternion
-from random import choices
-
-from helpers import State, Node, QuaternionMath, linear_regression
-
-
-def clip(min: float, max: float, val: float) -> float:
-    if val < min:
-        return min
-    elif val > max:
-        return max
-    else:
-        return val
+from typing import Optional
+from geometry_msgs.msg import Point
+from tf.transformations import euler_from_quaternion
+from helpers import State, Node, q_math
 
 
 class PersonFollower(State):
@@ -45,7 +31,10 @@ class PersonFollower(State):
         self.node.mark_target(Point(*target), scale=(0.25, 0.25, 0.25))
 
         heading_angle = self.calculate_heading_angle(target)
-        self.node.set_speed(0.1, -heading_angle * self.params)
+        self.node.set_speed(
+            self.params['forward_vel'],
+            -heading_angle * self.params['angular_speed_coeff']
+        )
 
     def detect_target(self) -> Optional[Point]:
         """
@@ -82,7 +71,7 @@ class PersonFollower(State):
         angle = math.atan2(target[1], target[0])
 
         cur_angle = euler_from_quaternion(
-            QuaternionMath.rospy_to_tf(self.node.orientation))[2]
+            q_math.rospy_to_tf(self.node.orientation))[2]
 
         # FIXME: this is not how you subtract angles
         return cur_angle - angle
