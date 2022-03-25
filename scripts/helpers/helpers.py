@@ -28,6 +28,7 @@ def linear_regression(x: np.array, y: np.array) -> Tuple[float, float]:
 
 
 def reset_gazebo(wait: bool = True):
+    return
     # Reset Gazebo
     rospy.wait_for_service('/gazebo/reset_world')
     rospy.ServiceProxy('/gazebo/reset_world', Empty)()

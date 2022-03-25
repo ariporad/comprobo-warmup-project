@@ -197,7 +197,7 @@ class MoveForwardState(NodeState):
     target: Point = Point(0, 0, 0)
     info_target: rospy.Publisher
 
-    def __init__(self, speed: float = 0.2, distance: float = 2, tolerance=0.1):
+    def __init__(self, speed: float = 0.2, distance: float = 1, tolerance=0.25):
         self.speed = speed
         self.distance = distance
         self.tolerance = tolerance
@@ -259,7 +259,7 @@ class RotatingLeftState(NodeState):
         )
         if QuaternionMath.ijk_magnitude(
             QuaternionMath.difference(self.target, self.node.orientation)
-        ) < 0.01:
+        ) < 0.025:
             self.node.set_speed(0, 0)
             self.node.transition(MoveForwardState())
         else:
@@ -267,12 +267,12 @@ class RotatingLeftState(NodeState):
 
 
 if __name__ == '__main__':
-    # Reset Gazebo
-    rospy.wait_for_service('/gazebo/reset_world')
-    rospy.ServiceProxy('/gazebo/reset_world', Empty)()
+    # # Reset Gazebo
+    # rospy.wait_for_service('/gazebo/reset_world')
+    # rospy.ServiceProxy('/gazebo/reset_world', Empty)()
 
-    # Let it settle
-    rospy.sleep(3)
+    # # Let it settle
+    # rospy.sleep(3)
 
     # Run
     node = StateMachineNode(MoveForwardState())

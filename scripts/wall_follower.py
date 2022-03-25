@@ -12,9 +12,6 @@ from helpers import State, Node, QuaternionMath, linear_regression
 
 
 class WallFollower(State):
-    def __init__(self):
-        self.range_pub = rospy.Publisher('/points', Marker, queue_size=10)
-
     def activate(self, node: Node):
         super().activate(node)
 
@@ -35,7 +32,7 @@ class WallFollower(State):
 
     def detect_wall_orientation(
         self,
-        threshold: float = 0.0005,
+        threshold: float = 0.01,
         min_matches: int = 20,
         points_per_attempt: int = 5,
         max_iters: int = 1000
