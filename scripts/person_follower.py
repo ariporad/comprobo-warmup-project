@@ -1,17 +1,15 @@
 #!/usr/bin/env python3
 import math
 import numpy as np
-from typing import Optional
-from geometry_msgs.msg import Point, TransformStamped, Quaternion, Twist, Vector3
-import ros_numpy.point_cloud2 as np_point_cloud2
-from scripts.helpers.helpers import make_marker
-from visualization_msgs.msg import Marker
-from sensor_msgs.msg import PointCloud2
 import rospy
-from tf.transformations import euler_from_quaternion
-from helpers import State, Node, point_math
-from tf2_msgs.msg import TFMessage
 import tf2_ros
+from typing import Optional
+from sensor_msgs.msg import PointCloud2
+from visualization_msgs.msg import Marker
+from geometry_msgs.msg import Point, Twist, Vector3
+from tf2_sensor_msgs.tf2_sensor_msgs import do_transform_cloud
+import ros_numpy.point_cloud2 as np_point_cloud2
+from helpers import make_marker
 
 
 class PersonFollower:
@@ -21,26 +19,10 @@ class PersonFollower:
         self.velocity_pub = rospy.Publisher('/cmd_vel', Twist, queue_size=10)
         self.target_pub = rospy.Publisher('/target', Marker, queue_size=10)
 
-        self.tf_pub = rospy.Publisher('/tf', TFMessage, queue_size=1)
         self.tf_buffer = tf2_ros.Buffer()
         self.tf_listener = tf2_ros.TransformListener(self.tf_buffer)
-        self.laser_scan_sub = rospy.SubscribeListener(
+        self.laser_scan_sub = rospy.Subscriber(
             '/projected_stable_scan', PointCloud2, self.handle_laser_scan)
-
-    def drive(self):
-        trans = self.tf_buffer.lookup_transform(
-            'base_link', 'target', rospy.Time.now(), rospy.Duration(0.5)
-        )
-
-        self.target_pub.publish(make_marker(frame_id='target'))
-
-        self.set_speed(
-            rospy.get_param('~forward_vel', 0.1) *
-            min(1, point_math.magnitude(trans.transform.translation)),
-            rospy.get_param('~angular_vel', 0.5) *
-            math.atan2(trans.transform.translation.y,
-                       trans.transform.translation.x)
-        )
 
     def set_speed(self, forward, angular):
         if math.isnan(forward):
@@ -55,23 +37,20 @@ class PersonFollower:
 
     def handle_laser_scan(self, point_cloud: PointCloud2):
         target = self.detect_target(point_cloud)
-        self.publish_frame(target)
-        self.drive()
 
-    def publish_frame(self, target: np.array):
-        t = TransformStamped()
+        if target is None:
+            self.set_speed(0, 0)
+            return
 
-        t.child_frame_id = 'target'
-        t.header.stamp = rospy.Time.now()
-        t.header.frame_id = self.node.laser_point_cloud.header.frame_id
+        self.target_pub.publish(make_marker(
+            Point(*target), frame_id='base_link', scale=0.25))
 
-        t.transform.translation.x = target[0]
-        t.transform.translation.y = target[1]
-        t.transform.translation.z = target[2]
-
-        t.transform.rotation = Quaternion(0, 0, 0, 1)
-
-        self.tf_pub.publish(TFMessage([t]))
+        self.set_speed(
+            rospy.get_param('~forward_vel', 0.1) *
+            min(1, math.sqrt((target[0] ** 2) + (target[1] ** 2))),
+            rospy.get_param('~angular_vel', 0.5) *
+            math.atan2(target[1], target[0])
+        )
 
     def detect_target(self, point_cloud: PointCloud2) -> Optional[np.array]:
         """
@@ -83,9 +62,15 @@ class PersonFollower:
 
         Returns None if no target can be found.
         """
-        point_cloud_rel = self.tf_buffer.transform(
-            point_cloud, 'base_link', rospy.Duration(0.5))
-
+        point_cloud_rel = do_transform_cloud(
+            point_cloud,
+            self.tf_buffer.lookup_transform(
+                'base_link',
+                point_cloud.header.frame_id,
+                rospy.Time.now(),
+                rospy.Duration(0.5)
+            )
+        )
         points = np_point_cloud2.pointcloud2_to_xyz_array(point_cloud_rel)
 
         relevant_points = points[
@@ -99,7 +84,7 @@ class PersonFollower:
         else:
             return np.mean(relevant_points, axis=0)
 
-    def run():
+    def run(self):
         rospy.spin()
 
 

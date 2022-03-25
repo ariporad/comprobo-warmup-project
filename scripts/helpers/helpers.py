@@ -61,6 +61,8 @@ def make_marker(point: Union[Point, Iterable[Point]] = Point(0, 0, 0),
 
     marker.lifetime = rospy.Duration(lifetime)
 
+    if isinstance(scale, int) or isinstance(scale, float):
+        scale = (scale, scale, scale)
     x, y, z = scale
     marker.scale.x = x
     marker.scale.y = y
