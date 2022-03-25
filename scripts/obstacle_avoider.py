@@ -28,6 +28,7 @@ Sane defaults, determined through experimentation in the simulator, have been se
 import math
 import rospy
 import tf2_ros
+import tf2_geometry_msgs
 from typing import Tuple, Optional
 from sensor_msgs.msg import PointCloud2
 from visualization_msgs.msg import Marker
@@ -52,7 +53,6 @@ class ObstacleAvoider:
 
         self.goal = PointStamped()
         self.goal.header.frame_id = 'odom'
-        self.goal.header.stamp = rospy.Time.now()
         # Default goal is a good place for the default gauntlet sim world.
         self.goal.point.x = rospy.get_param('~goal_x', 0)
         self.goal.point.y = rospy.get_param('~goal_y', -1.875)
@@ -129,6 +129,7 @@ class ObstacleAvoider:
         """
 
         # Calculate the goal, relative to the robot
+        self.goal.header.stamp = rospy.Time.now()
         goal_rel = self.tf_buffer.transform(
             self.goal, 'base_link', rospy.Duration(0.5)
         )
