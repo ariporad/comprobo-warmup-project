@@ -30,7 +30,7 @@ def reset_gazebo(wait: bool = True):
         rospy.sleep(3)
 
 
-def make_marker(point: Union[Point, Iterable[Point]],
+def make_marker(point: Union[Point, Iterable[Point]] = Point(0, 0, 0),
                 orientation: Quaternion = Quaternion(0, 0, 0, 1),
                 id: int = 0,
                 ns: str = "aporad",

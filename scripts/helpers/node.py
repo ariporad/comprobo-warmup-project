@@ -4,6 +4,7 @@ import numpy as np
 import rospy
 import math
 import tf
+import tf2_ros
 import ros_numpy.point_cloud2 as np_point_cloud2
 from math import pi
 from typing import Any, Generic, Optional, List, Type, Union, Iterable, Tuple, TypeVar, Dict
@@ -85,7 +86,7 @@ class Node:
     def update(self):
         try:
             self.active_state.update()
-        except WaitingForData:
+        except (WaitingForData, tf2_ros.LookupException, tf2_ros.ConnectivityException, tf2_ros.ExtrapolationException):
             # If we're waiting for data, then we can't update yet (but it isn't an error!)
             pass
 
