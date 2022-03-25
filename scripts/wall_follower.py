@@ -64,7 +64,7 @@ class WallFollower(State):
                 orientation = q_math.tf_to_rospy(
                     quaternion_from_euler(0, 0, angle)
                 )
-                print("RANSAC, m = ", m, "angle =", angle * (180 / math.pi))
+                print("RANSAC, m = ", m, "angle =", angle * (180 / math.pi),)
                 self.node.mark_target(
                     # Marker Option 1: Vector
 
