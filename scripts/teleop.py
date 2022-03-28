@@ -15,7 +15,7 @@ Parameters:
 - forward_vel: forward (and backward) speed of the robot
 - angular_vel: angular speed of the robot
 
-Sane defaults, determined through experimentation in the simulator, have been set for all parameters.
+Reasonable defaults, determined through experimentation in the simulator, have been set for all parameters.
 """
 from geometry_msgs.msg import Twist, Vector3
 import rospy

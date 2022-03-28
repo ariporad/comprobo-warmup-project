@@ -1,4 +1,6 @@
-#!/usr/bin/env python3
+"""
+Miscellaneous helper methods
+"""
 from __future__ import annotations
 import numpy as np
 import rospy
@@ -19,17 +21,6 @@ def linear_regression(x: np.array, y: np.array) -> Tuple[float, float]:
     return m, b
 
 
-def reset_gazebo(wait: bool = True):
-    return
-    # Reset Gazebo
-    rospy.wait_for_service('/gazebo/reset_world')
-    rospy.ServiceProxy('/gazebo/reset_world', Empty)()
-
-    # Let it settle
-    if wait:
-        rospy.sleep(3)
-
-
 def make_marker(point: Union[Point, Iterable[Point]] = Point(0, 0, 0),
                 orientation: Quaternion = Quaternion(0, 0, 0, 1),
                 id: int = 0,
@@ -41,7 +32,7 @@ def make_marker(point: Union[Point, Iterable[Point]] = Point(0, 0, 0),
                 lifetime=1,
                 frame_id: str = 'odom'):
     """
-    Generate a Marker message, with some sane defaults.
+    Generate a Marker message, with some reasonable defaults.
 
     Adapted from: https://comprobo20.github.io/Sample_code/marker_sample
     """

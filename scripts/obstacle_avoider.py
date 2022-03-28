@@ -6,8 +6,8 @@ Uses a potential field to simulate the goal and obstacles, inspired by [0].
 
 Parameters:
 
-goal_x[=0]: x coordinate of the target
-goal_y[=-1.875]: y coordinate of the target
+goal_x: x coordinate of the target
+goal_y: y coordinate of the target
 
 forward_vel: maximum forwards velocity
 angular_vel: angular velocity (may be exceeded, but used for setting the speed)
@@ -21,7 +21,7 @@ obstacle_decay_factor: higher values result in farther-away obstacles having les
 
 goal_tolerance: how close to the goal need the robot be to stop moving?
 
-Sane defaults, determined through experimentation in the simulator, have been set for all parameters.
+Reasonable defaults, determined through experimentation in the simulator, have been set for all parameters.
 
 [0]: https://phoenix.goucher.edu/~jillz/cs325_robotics/goodrich_potential_fields.pdf
 """

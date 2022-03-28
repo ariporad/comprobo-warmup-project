@@ -1,3 +1,8 @@
+"""
+Helper methods for doing math with quaternions.
+
+Don't use this. Use reference frames and TF instead. This was written before I understood that.
+"""
 import math
 import numpy as np
 from geometry_msgs.msg import Quaternion
@@ -27,6 +32,7 @@ def ijk_magnitude(q: Quaternion) -> Quaternion:
 
 
 def rospy_to_tf(q: Quaternion) -> np.array:
+    """ Convert from a Quaternion message object to a tf/numpy array representation. """
     if isinstance(q, list):
         q = np.array(q)
     if isinstance(q, np.ndarray):
@@ -35,6 +41,7 @@ def rospy_to_tf(q: Quaternion) -> np.array:
 
 
 def tf_to_rospy(q: np.array) -> Quaternion:
+    """ Convert from a tf/numpy array representation to a Quaternion message object. """
     if isinstance(q, Quaternion):
         return q
     return Quaternion(q[0], q[1], q[2], q[3])

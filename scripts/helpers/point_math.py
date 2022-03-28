@@ -1,3 +1,6 @@
+"""
+Helper methods for doing math with Point message objects.
+"""
 import math
 from typing import List
 from geometry_msgs.msg import Point

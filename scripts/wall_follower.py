@@ -1,4 +1,11 @@
 #!/usr/bin/env python3
+"""
+Wall Follower
+
+Use the LIDAR (and RANSAC) to detect a wall, then drive parallel to it.
+
+This script predates my understanding of how to use TF, and more broadly how to write good ROS code.
+"""
 import math
 import numpy as np
 import rospy

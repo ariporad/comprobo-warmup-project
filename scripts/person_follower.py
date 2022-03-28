@@ -14,7 +14,7 @@ max_depth: the far edge of the detection zone is this distance from the center o
 forward_vel: controls the forward speed of the robot, but not a maximum speed
 angular_vel: controls the angular speed of the robot, but not a maximum speed
 
-Sane defaults, determined through experimentation in the simulator, have been set for all parameters.
+Reasonable defaults, determined through experimentation in the simulator, have been set for all parameters.
 """
 import math
 import numpy as np
