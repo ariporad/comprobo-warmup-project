@@ -41,6 +41,7 @@ Now that I understand (at least somewhat) TF and reference frames, I would inste
 1. When the robot switches states, use TF to establish a `target` reference frame as a 90 degree/1 meter (as appropriate) transformation of the robot's current reference frame (`base_link`).
 2. Whenever new odometry data arrives, use TF to determine the new difference between the `target` and updated `base_link` reference frames (ie. how far the robot is from its target, either in terms of rotation or translation).
 3. Act depending on that difference: if the robot is sufficiently near its target, transition to the next state; otherwise, set its speed proportionally to the difference.
+	- Using proportional control here would also allow the tolerances to be greatly reduced, resulting in a more accurate square. Right now, they're fairly high since the robot is going fast when it passes the target, and depending on how fast the code is running it may "miss" the robot hitting the target.
 
 This alternate solution would be much better and more idiomatic ROS code, in addition to being easier, simpler, and less error prone.
 
