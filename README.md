@@ -94,4 +94,4 @@ This project was a fun, engaging way to gain familiarity with ROS, TF, and assoc
 [person-follower]: https://user-images.githubusercontent.com/1817508/160192347-a02f9a9e-7793-4760-ad47-fd27924d5c34.mov
 [wall-follower]: https://user-images.githubusercontent.com/1817508/160192468-5fdffefd-ad3f-4eb7-8a0d-cd1665aa869f.mov
 [obstacle-avoider]: https://user-images.githubusercontent.com/1817508/160192595-590895bc-a807-4a51-b52f-4d74bc17aeb3.mov
-[obstacle-target]: recordings/obstacle_avoidance_target.jpg
+[obstacle-target]: https://user-images.githubusercontent.com/1817508/160307886-0bf65e13-2a41-4689-9366-54254673a0ce.jpg
